@@ -12,17 +12,69 @@ connector.on('connected',function(){
     connector.checkConnection(function(msg){
         console.log(msg);
     });
-
+/*
+    
     connector.createSensor('test name', function(msg){
         console.log(msg);
     });
 
-    
-    connector.getAllRegisteredSensors(function(msg){
+    connector.updateSensor("ff7603e6ffbe40b1b8b77477db1dc2dc", 'New name', function(msg){
         console.log(msg);
     });
     
-    /*
+    connector.deleteSensor("bd41e49cb03f454db5a5571b3bd8f783", function(msg){
+        console.log(msg);
+    });
+
+
+    connector.registerMetric("ff7603e6ffbe40b1b8b77477db1dc2dc",false,function(msg){
+        console.log(msg);
+    });
+
+
+    var metricData = `{ "metrics": [ 
+                                     { "value" : 100, 	"metricId" : "078d5ff310eb4219afcf1e9b9006672e"	},
+                                     { "value" : 222, 	"metricId" : "b60ed9b6230047f3a3a6db13c2cb9d38"	}
+                                    ] 
+                    }`;
+                    
+    connector.updateSensor("ff7603e6ffbe40b1b8b77477db1dc2dc",metricData,function(msg){
+        console.log(msg);
+    });
+
+ 
+
+    connector.updateSensorMetadata("ff7603e6ffbe40b1b8b77477db1dc2dc", 'New name', function(msg){
+        console.log(msg);
+    });
+    
+    
+    connector.getMetricInfo("ff7603e6ffbe40b1b8b77477db1dc2dc","078d5ff310eb4219afcf1e9b9006672e",function(msg){
+        console.log(msg);
+    })
+    */
+    var metrics = `{ "metrics": [ 
+                                    { "metricId" : "0a44b7f4eefd48e18ea8ce208108d233" }
+                                ] }"`;
+
+    connector.deleteMetrics("ff7603e6ffbe40b1b8b77477db1dc2dc", metrics,function(msg){
+        console.log(msg)
+    });
+    
+     /*
+     var error = `{ "errocode" : 2, "errorMessage" : "your Error Message here" }`;
+   
+
+    connector.errorAnnounce(error,function(msg){
+        console.log(msg);
+    });
+    
+    
+    connector.getAllRegisteredSensors( function(msg){
+        console.log(msg);
+    });
+
+ 
     connector.deprovisionConnector(function(msg){
         console.log(msg);
     });
