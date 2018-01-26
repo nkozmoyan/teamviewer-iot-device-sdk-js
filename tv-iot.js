@@ -13,7 +13,9 @@ class TVIoT extends Emmiter {
         super();
         
         this.host = '10.70.14.245';
+
         //this.TrustedCA = '/var/lib/teamviewer-iot-agent/certs/TeamViewerAuthority.crt';
+
         this.APIversion = '/v1.0/'; 
 
         this.connectionOptions = {
@@ -32,7 +34,7 @@ class TVIoT extends Emmiter {
             this.connectionOptions.port =  1883;
             this.connectionOptions.protocol = 'tls';
 
-            this.connectClient(this.connectionOptions);
+            this.connectClient_(this.connectionOptions);
               
         } else {
             this.connectionOptions.port =  8883;
@@ -41,38 +43,38 @@ class TVIoT extends Emmiter {
             this.connectionOptions.key  = fs.readFileSync(path.join( keyFile));
             this.connectionOptions.cert = fs.readFileSync(path.join( certFile));
 
-            pem.readCertificateInfo(this.connectionOptions.cert, this.getConnectorId.bind(this)); 
+            pem.readCertificateInfo(this.connectionOptions.cert, this.getConnectorId_.bind(this)); 
         }
         
 
     }
 
-    getConnectorId(err,obj){
+    getConnectorId_(err,obj){
 
         this.connectorId  = obj.commonName;
-        this.connectClient();
+        this.connectClient_();
 
     }
 
-    connectClient(){
+    connectClient_(){
 
         this.client  = mqtt.connect( this.connectionOptions );
 
-        this.client.on('connect', this.onConnect.bind(this));
-        this.client.on('message', this.onMessage.bind(this));
+        this.client.on('connect', this.onConnect_.bind(this));
+        this.client.on('message', this.onMessage_.bind(this));
 
         this.client.on('error',  (msg) => console.log('error: ' + msg));
         this.client.on('offline',(msg) => console.log('offline: ' + msg));
         this.client.on('close',  (msg) => console.log('close: ' + msg));
     }
 
-    onConnect(){
+    onConnect_(){
         
         this.emit('connected'); 
     
     }
     
-    onMessage(topic, message){
+    onMessage_(topic, message){
 
         message = message.toString();
         
@@ -80,7 +82,7 @@ class TVIoT extends Emmiter {
 
     }
 
-    publishAPI(subscribeTopic, publishTopic, message,callback){
+    publishAPI_(subscribeTopic, publishTopic, message,callback){
 
         console.log(`\n\nSub: ${ subscribeTopic }\nPub: ${ publishTopic }\nMsg: ${ message }\n\n`);
         
@@ -90,7 +92,7 @@ class TVIoT extends Emmiter {
         this.on(subscribeTopic,callback);
     }
     
-    csrRequest(err,obj){
+    csrRequest_(err,obj){
 
         var csrReq = obj.csr + '\n';
         
@@ -103,19 +105,19 @@ class TVIoT extends Emmiter {
 
         var message = csrReq.toString("ascii");
 
-        this.publishAPI(subscribeTopic,publishTopic,message, this.saveCert.bind(this));
+        this.publishAPI_(subscribeTopic,publishTopic,message, this.saveCert_.bind(this));
 
     }
 
-    saveCert(crt){
+    saveCert_(crt){
 
         this.crt = crt;
 
-        pem.readCertificateInfo(crt, this.writeFiles.bind(this)); 
+        pem.readCertificateInfo(crt, this.writeFiles_.bind(this)); 
 
     }
 
-    writeFiles(err, obj){
+    writeFiles_(err, obj){
         
         var connectorId  = obj.commonName;
         
@@ -128,8 +130,9 @@ class TVIoT extends Emmiter {
         console.log(`Key / Certificate for connector( ${ connectorId } ) has been saved as ${keyFile} / ${certFile}`);
     }
 
+    // --- Public Methods
     // --- 2.Connector
-
+   
     createConnector() { // Creates a certifcate for a new connector
         
         /*
@@ -139,7 +142,7 @@ class TVIoT extends Emmiter {
         this.connectAPI(); // with no arguments, connects using 1883 port
 
         this.on('connected',function(){
-            pem.createCSR( { hash:'sha256' }, this.csrRequest.bind(this));
+            pem.createCSR( { hash:'sha256' }, this.csrRequest_.bind(this));
         }.bind(this));
         
 
@@ -155,7 +158,7 @@ class TVIoT extends Emmiter {
         var subscribeTopic = publishTopic + '/inbox';
         var message = '{}';
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(subscribeTopic,publishTopic,message, callback);
     }
 
     deprovisionConnector(callback){
@@ -168,20 +171,22 @@ class TVIoT extends Emmiter {
         var errorTopic = publishTopic + '/error/inbox';
         var message = '{}';
 
-        this.publishAPI(errorTopic,publishTopic,message, callback);
+        this.publishAPI_(errorTopic,publishTopic,message, callback);
     }
 
     checkConnection(callback){
 
         /*
         2.4
+        /:version/:connectorId/ping
+
         */
 
         var publishTopic = this.APIversion + this.connectorId +'/ping';
         var subscribeTopic = publishTopic + '/info/inbox';
         var message = '{"request":"This is a ping!"}';
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(subscribeTopic,publishTopic,message, callback);
     }
 
     // ---  3.Sensor
@@ -199,7 +204,7 @@ class TVIoT extends Emmiter {
 
         var message = `{ "name" : "${ sensorName }" }`;
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(subscribeTopic,publishTopic,message, callback);
 
     }
 
@@ -222,7 +227,7 @@ class TVIoT extends Emmiter {
 
         var message = metricData;
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(subscribeTopic,publishTopic,message, callback);
     }
 
     updateSensorMetadata(sensorId,sensorName, callback){
@@ -238,8 +243,8 @@ class TVIoT extends Emmiter {
         var errorTopic      = reqBase + '/error/inbox'; 
 
         var message = `{ "name" : "${ sensorName }" }`;
-        console.log(message);
-        this.publishAPI(errorTopic,publishTopic,message, callback);
+        
+        this.publishAPI_(errorTopic,publishTopic,message, callback);
     }
 
     getMetricInfo(sensorId,metricId,callback){
@@ -261,7 +266,7 @@ class TVIoT extends Emmiter {
 
         var message = '{}';
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(subscribeTopic,publishTopic,message, callback);
 
     }
 
@@ -281,14 +286,11 @@ class TVIoT extends Emmiter {
 
         var message = '{}';
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(subscribeTopic,publishTopic,message, callback);
 
     }
-
-
     
     // --- 4.Metric
-
      
     registerMetric(sensorId,metricDefinition,callback){
 
@@ -303,13 +305,9 @@ class TVIoT extends Emmiter {
         var subscribeTopic  = reqBase + '/inbox';
         var errorTopic      = reqBase + '/error/inbox'; 
 
-        var message = `	 { "metrics" : [
-                                        {"matchingId" : "1", "valueUnit": "SI.Temperature.CELSIUS",  "name" : "SDK Test Metric" },
-                                        {"matchingId" : "2", "valueType" : "integer" , "valueAnnotation": "Test Annotation", "name" : "Test name"}
-                                        ]
-                        }`;
+        var message =  metricDefinition; 
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(subscribeTopic,publishTopic,message, callback);
     }
     
     deleteMetrics(sensorId,metrics,callback){
@@ -327,7 +325,7 @@ class TVIoT extends Emmiter {
 
         var message = metrics;
 
-        this.publishAPI(subscribeTopic,publishTopic,message, callback);
+        this.publishAPI_(errorTopic,publishTopic,message, callback);
     }
 
 
@@ -347,7 +345,7 @@ class TVIoT extends Emmiter {
 
         var message = error;
 
-        this.publishAPI(errorTopic,publishTopic,message, callback);
+        this.publishAPI_(errorTopic,publishTopic,message, callback);
     }
 
     errorAnnounceSensor(sensorId,error, callback){
@@ -364,7 +362,7 @@ class TVIoT extends Emmiter {
 
         var message = error;
 
-        this.publishAPI(errorTopic,publishTopic,message, callback);
+        this.publishAPI_(errorTopic,publishTopic,message, callback);
     }
 
     errorAnnounceMetric(sensorId,metricId,error, callback){
@@ -381,7 +379,7 @@ class TVIoT extends Emmiter {
 
         var message = error;
 
-        this.publishAPI(errorTopic,publishTopic,message, callback);
+        this.publishAPI_(errorTopic,publishTopic,message, callback);
     }
 
 

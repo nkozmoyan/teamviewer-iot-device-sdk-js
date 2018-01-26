@@ -1,8 +1,10 @@
 connector = require("./tv-iot.js");
+
+connector.connectAPI('./cert/cert-cf907f0faf0f4e978bb5398d32d27c13.pem','./cert/key-cf907f0faf0f4e978bb5398d32d27c13.pem');
 /*
 connector.createConnector();
+
 */
-connector.connectAPI('./cert/cert-cf907f0faf0f4e978bb5398d32d27c13.pem','./cert/key-cf907f0faf0f4e978bb5398d32d27c13.pem');
 
 connector.on('connected',function(){
 
@@ -26,8 +28,13 @@ connector.on('connected',function(){
         console.log(msg);
     });
 
+    metric = `	 { "metrics" : [
+                                        {"matchingId" : "1", "valueUnit": "SI.Temperature.CELSIUS",  "name" : "SDK Test Metric" },
+                                        {"matchingId" : "2", "valueType" : "integer" , "valueAnnotation": "Test Annotation", "name" : "Test name"}
+                                        ]
+                        }`;
 
-    connector.registerMetric("ff7603e6ffbe40b1b8b77477db1dc2dc",false,function(msg){
+    connector.registerMetric("ff7603e6ffbe40b1b8b77477db1dc2dc",metric, function(msg){
         console.log(msg);
     });
 
@@ -52,7 +59,7 @@ connector.on('connected',function(){
     connector.getMetricInfo("ff7603e6ffbe40b1b8b77477db1dc2dc","078d5ff310eb4219afcf1e9b9006672e",function(msg){
         console.log(msg);
     })
-    */
+   
     var metrics = `{ "metrics": [ 
                                     { "metricId" : "0a44b7f4eefd48e18ea8ce208108d233" }
                                 ] }"`;
@@ -61,23 +68,30 @@ connector.on('connected',function(){
         console.log(msg)
     });
     
-     /*
+
      var error = `{ "errocode" : 2, "errorMessage" : "your Error Message here" }`;
    
 
     connector.errorAnnounce(error,function(msg){
         console.log(msg);
     });
-    
-    
-    connector.getAllRegisteredSensors( function(msg){
-        console.log(msg);
-    });
-
  
     connector.deprovisionConnector(function(msg){
         console.log(msg);
     });
     */
-    
+
+    connector.getAllRegisteredSensors( function(msg){
+
+        msg = obj = JSON.parse(msg);
+
+        msg.forEach(function(element) {
+            
+           connector.deleteSensor(element['sensorId'], function(msg){
+                console.log(msg);
+            });
+        });
+        
+    });
+
 })
